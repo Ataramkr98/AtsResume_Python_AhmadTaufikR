@@ -1,0 +1,83 @@
+[project]
+name = "ats-resume-parser"
+version = "0.1.0"
+description = "Tenant-aware applicant tracking system with deterministic resume parsing"
+requires-python = ">=3.12"
+dependencies = [
+  "Django>=5.2,<5.3",
+  "Jinja2>=3.1,<4",
+  "djangorestframework>=3.15,<4",
+  "django-filter>=25,<27",
+  "drf-spectacular>=0.28,<1",
+  "celery[redis]>=5.5,<6",
+  "PyMySQL>=1.1,<2",
+  "psycopg[binary]>=3.2,<4",
+  "whitenoise>=6.8,<7",
+  "python-dotenv>=1.0,<2",
+  "cryptography>=44,<50",
+  "bleach>=6.2,<7",
+  "pypdf>=5,<7",
+  "python-docx>=1.1,<2",
+  "boto3>=1.37,<2",
+  "django-storages>=1.14,<2",
+  "django-otp>=1.6,<2",
+  "icalendar>=6,<8",
+  "gunicorn>=23,<24",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+  "pytest-django>=4.10,<5",
+  "pytest-cov>=6,<8",
+  "factory-boy>=3.3,<4",
+  "ruff>=0.11,<1",
+  "mypy>=1.15,<2",
+  "django-stubs>=5.2,<6",
+  "coverage>=7.8,<8",
+]
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["apps*", "config*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_tests.py"]
+addopts = "-q --disable-warnings"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["**/migrations/*.py", "static_dist", "node_modules"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ"]
+ignore = ["DJ001", "E501"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+python_version = "3.12"
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[tool.coverage.run]
+source = ["apps", "config"]
+omit = ["*/migrations/*", "config/wsgi.py", "config/asgi.py"]
+# Keep a single data file. Parallel mode writes .coverage.<host>.<pid>.<rand> fragments and then
+# merges them, which makes the report depend on a cleanup step we would rather not need.
+parallel = false
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]

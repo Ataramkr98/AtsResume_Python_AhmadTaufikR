@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="icon" href="{{ static('favicon.svg') }}" type="image/svg+xml">
+  <title>{% block title %}Careers{% endblock %} · {{ organization.name }}</title>
+  <meta name="description" content="Open roles at {{ organization.name }}. Apply online and hear back from a human.">
+  <link rel="stylesheet" href="{{ static('css/app.css') }}?v=navy-cobalt-20260823">
+  <script src="{{ static('js/app.js') }}?v=navy-cobalt-20260823" defer></script>
+</head>
+<body class="bg-canvas">
+  <header class="public-header">
+    <div class="public-header-inner">
+      <a href="{{ url('public-jobs', organization_slug=organization.slug) }}" class="flex items-center gap-3" aria-label="{{ organization.name }} careers">
+        <span class="brand-mark h-8 w-8"><i data-lucide="scan-text" class="icon"></i></span>
+        <span class="text-sm font-extrabold tracking-[-0.02em] text-slate-950">{{ organization.name }}</span>
+      </a>
+      <span class="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Careers</span>
+    </div>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer class="public-footer">Candidate information is handled securely and reviewed by people.</footer>
+</body>
+</html>

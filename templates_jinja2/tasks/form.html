@@ -1,0 +1,26 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, field %}
+{% block title %}New task{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <a href="{{ url('tasks', organization_slug=organization.slug) }}" class="breadcrumb">{{ icon('arrow-left', 'icon-sm') }}<span>Back to tasks</span></a>
+  <div class="mt-5"><p class="eyebrow">Follow-up</p><h1 class="page-title mt-1">Create a task</h1><p class="page-subtitle">Assign a follow-up to a teammate and link it to the candidate or role it belongs to.</p></div>
+  <form method="post" class="form-shell panel mt-7 p-6 sm:p-7">
+    {{ csrf_input }}
+    {% if form.non_field_errors() %}<div class="alert alert-error mb-5">{{ icon('circle-alert', 'icon-sm') }}<span>{{ form.non_field_errors() }}</span></div>{% endif %}
+    <div class="grid gap-5 sm:grid-cols-2">
+      {{ field(form.title, 'sm:col-span-2') }}
+      {{ field(form.assignee) }}
+      {{ field(form.priority) }}
+      {{ field(form.due_at) }}
+      {{ field(form.job) }}
+      {{ field(form.application, 'sm:col-span-2') }}
+    </div>
+    <div class="mt-5">{{ field(form.description) }}</div>
+    <div class="mt-7 flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+      <a href="{{ url('tasks', organization_slug=organization.slug) }}" class="btn-secondary">Cancel</a>
+      <button class="btn-primary" type="submit">{{ icon('plus', 'icon-sm') }}<span>Create task</span></button>
+    </div>
+  </form>
+</div>
+{% endblock %}

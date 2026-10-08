@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Aster ATS">
+  <rect width="32" height="32" rx="7" fill="#0b1739"/>
+  <g fill="none" stroke="#60a5fa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 7.5H8.6A1.6 1.6 0 0 0 7 9.1v2.4"/>
+    <path d="M21 7.5h2.4A1.6 1.6 0 0 1 25 9.1v2.4"/>
+    <path d="M11 24.5H8.6A1.6 1.6 0 0 1 7 22.9v-2.4"/>
+    <path d="M21 24.5h2.4a1.6 1.6 0 0 0 1.6-1.6v-2.4"/>
+  </g>
+  <g fill="#ffffff">
+    <rect x="11.5" y="12.6" width="9" height="2.1" rx="1.05"/>
+    <rect x="13.6" y="16.4" width="6.9" height="2.1" rx="1.05"/>
+  </g>
+</svg>

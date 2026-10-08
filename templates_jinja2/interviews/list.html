@@ -1,0 +1,43 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, empty_state, status_badge, pagination %}
+{% block title %}Interviews{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><p class="eyebrow">Schedule</p><h1 class="page-title mt-1">Interviews</h1><p class="page-subtitle">Your agenda and assigned feedback.</p></div>
+  <form class="w-full sm:w-56"><label class="sr-only" for="interview-status">Filter by status</label><select id="interview-status" name="status" class="mt-0" onchange="this.form.submit()"><option value="">All statuses</option>{% for value, label in [('SCHEDULED','Scheduled'),('COMPLETED','Completed'),('CANCELLED','Cancelled')] %}<option value="{{ value }}" {{ 'selected' if status_filter == value else '' }}>{{ label }}</option>{% endfor %}</select></form>
+</div>
+<div class="mt-7 grid gap-4 lg:grid-cols-2">
+  {% for interview in page %}
+  <article class="panel p-5 transition duration-150 hover:-translate-y-0.5 hover:shadow-float">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0">
+        {{ status_badge(interview.status, interview.get_status_display()) }}
+        <h2 class="mt-3 truncate text-base font-extrabold text-slate-950">{{ interview.title }}</h2>
+        <p class="mt-1 truncate text-sm text-slate-500">{{ interview.application.candidate }} · {{ interview.application.job.title }}</p>
+      </div>
+      <div class="shrink-0 rounded-[10px] border border-brand-100 bg-brand-50 px-3 py-2 text-center">
+        <div class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-brand-700">{{ interview.start_at.strftime('%b') }}</div>
+        <div class="text-xl font-extrabold tracking-[-0.05em] text-brand-900">{{ interview.start_at.strftime('%d') }}</div>
+      </div>
+    </div>
+    <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
+      <span class="inline-flex items-center gap-1.5">{{ icon('clock-3', 'icon-sm') }}{{ interview.start_at.strftime('%H:%M') }}–{{ interview.end_at.strftime('%H:%M') }} {{ interview.timezone }}</span>
+      <span aria-hidden="true">·</span>
+      <span>{{ interview.interview_type.title() }}</span>
+      <span aria-hidden="true">·</span>
+      <span class="inline-flex items-center gap-1.5">{{ icon('users', 'icon-sm') }}{{ interview.participants.all()|length }} invited</span>
+    </div>
+    <div class="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <a class="inline-flex items-center gap-1.5 text-xs font-extrabold text-brand-700 hover:text-brand-800" href="{{ url('scorecard', organization_slug=organization.slug, interview_id=interview.id) }}">Open kit {{ icon('chevron-right', 'icon-sm') }}</a>
+      {% if can_manage_interviews and interview.status == 'SCHEDULED' %}
+      <div class="flex flex-wrap gap-2">
+        <form method="post" action="{{ url('interview-complete', organization_slug=organization.slug, interview_id=interview.id) }}">{{ csrf_input }}<button class="btn-secondary px-3 py-2 text-xs" type="submit">{{ icon('check', 'icon-sm') }}<span>Mark complete</span></button></form>
+        <form method="post" action="{{ url('interview-cancel', organization_slug=organization.slug, interview_id=interview.id) }}">{{ csrf_input }}<button class="btn-quiet px-3 py-2 text-xs text-rose-700 hover:bg-rose-50" type="submit" data-confirm="Cancel this interview? Interviewers will no longer see it as scheduled.">{{ icon('ban', 'icon-sm') }}<span>Cancel</span></button></form>
+      </div>
+      {% endif %}
+    </div>
+  </article>
+  {% else %}<div class="panel lg:col-span-2">{{ empty_state('calendar-days', 'No interviews match this view', 'Schedule one from a candidate application.') }}</div>{% endfor %}
+</div>
+{% if page.paginator.num_pages > 1 %}<div class="panel mt-5">{{ pagination(page, querystring) }}</div>{% endif %}
+{% endblock %}

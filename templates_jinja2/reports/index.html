@@ -1,0 +1,154 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, empty_state %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Insights</p>
+    <h1 class="page-title mt-1">Reports</h1>
+    <p class="page-subtitle">Hiring funnel, stage velocity and source quality for {{ report.range_label|lower }}. Every figure is tenant-scoped and permission-checked.</p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    {% for token, label in range_options %}
+    <a href="?range={{ token }}" class="btn-{{ 'primary' if report.range_token == token else 'secondary' }} px-3 py-2 text-xs">{{ label }}</a>
+    {% endfor %}
+    <a href="{{ url('reports-export', organization_slug=organization.slug) }}?range={{ report.range_token }}" class="btn-secondary px-3 py-2 text-xs">{{ icon('download', 'icon-sm') }}<span>Export CSV</span></a>
+  </div>
+</div>
+
+<section class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-5" aria-label="Headline metrics">
+  {% for label, value, note, icon_name in [
+    ('Open jobs', report.summary.open_jobs, 'Published and accepting applications', 'briefcase'),
+    ('Active applications', report.summary.active_applications, 'In progress across all stages', 'users'),
+    ('Interviews scheduled', report.summary.interviews_scheduled, 'Awaiting to take place', 'calendar-days'),
+    ('Hires', report.summary.hired, 'Reached a hired stage', 'check-circle-2'),
+    ('Parse success', (report.summary.parse_success_rate ~ '%') if report.summary.parse_success_rate is not none else '—', report.summary.resumes_parsed ~ ' of ' ~ report.summary.resumes_total ~ ' resumes', 'scan-text')
+  ] %}
+  <div class="stat-tile">
+    <div class="flex items-start justify-between gap-3"><span class="stat-icon">{{ icon(icon_name, 'icon-lg') }}</span><span class="stat-label">{{ label }}</span></div>
+    <div><div class="stat-value">{{ value }}</div><div class="stat-note">{{ note }}</div></div>
+  </div>
+  {% endfor %}
+</section>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-5">
+  <section class="panel xl:col-span-3">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Hiring funnel</h2><p class="mt-1 text-xs text-slate-500">Distinct applications that reached each stage</p></div>{{ icon('trending-up', 'icon-lg text-slate-400') }}</div>
+    <div class="p-5">
+      {% if report.funnel %}
+      <div class="h-[260px]"><canvas data-chart="funnel" aria-label="Applications by stage" role="img"></canvas></div>
+      <script type="application/json" data-chart-data="funnel">{{ chart_data.funnel|tojson }}</script>
+      {% else %}{{ empty_state('columns-3', 'No applications in this window', 'Widen the date range or publish a role to start collecting data.') }}{% endif %}
+    </div>
+  </section>
+  <section class="panel xl:col-span-2">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Applications by source</h2><p class="mt-1 text-xs text-slate-500">Where candidates come from</p></div>{{ icon('chart-column', 'icon-lg text-slate-400') }}</div>
+    <div class="p-5">
+      {% if report.source_quality %}
+      <div class="h-[260px]"><canvas data-chart="sources" aria-label="Applications by source" role="img"></canvas></div>
+      <script type="application/json" data-chart-data="sources">{{ chart_data.sources|tojson }}</script>
+      {% else %}{{ empty_state('users', 'No source data yet', 'Sources are recorded when an application is created.') }}{% endif %}
+    </div>
+  </section>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-3">
+  <section class="panel xl:col-span-2">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Stage conversion</h2><p class="mt-1 text-xs text-slate-500">Share of the applied cohort, and the step-to-step rate</p></div></div>
+    <div class="table-wrap">
+      <table class="data-table data-table--responsive">
+        <thead><tr><th>Stage</th><th>Applications</th><th>Of applied</th><th>Step conversion</th></tr></thead>
+        <tbody>
+          {% for row in report.funnel %}
+          <tr>
+            <td data-label="Stage" class="font-extrabold text-slate-950">{{ row.stage }}</td>
+            <td data-label="Applications" class="font-bold text-slate-950">{{ row.count }}</td>
+            <td data-label="Of applied">{{ row.of_total }}%</td>
+            <td data-label="Step conversion">{% if row.step_conversion is not none %}{{ row.step_conversion }}%{% else %}<span class="text-slate-400">—</span>{% endif %}</td>
+          </tr>
+          {% else %}<tr><td colspan="4">{{ empty_state('columns-3', 'No funnel data', 'Applications will populate this table.') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Time to hire</h2><p class="mt-1 text-xs text-slate-500">Application to hired</p></div></div>
+    <div class="space-y-5 p-5">
+      <div><div class="stat-label">Average</div><div class="stat-value">{{ (report.time_to_hire.average_days ~ 'd') if report.time_to_hire.average_days is not none else '—' }}</div></div>
+      <div><div class="stat-label">Median</div><div class="stat-value">{{ (report.time_to_hire.median_days ~ 'd') if report.time_to_hire.median_days is not none else '—' }}</div></div>
+      <p class="border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">Based on {{ report.time_to_hire.count }} completed hire{{ '' if report.time_to_hire.count == 1 else 's' }} in range.</p>
+    </div>
+  </section>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-3">
+  <section class="panel xl:col-span-2">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Average time in stage</h2><p class="mt-1 text-xs text-slate-500">Measured from stage history, excluding the current open stage</p></div>{{ icon('clock-3', 'icon-lg text-slate-400') }}</div>
+    <div class="p-5">
+      {% if report.time_in_stage %}
+      <div class="h-[220px]"><canvas data-chart="timeInStage" aria-label="Average days per stage" role="img"></canvas></div>
+      <script type="application/json" data-chart-data="timeInStage">{{ chart_data.timeInStage|tojson }}</script>
+      {% else %}{{ empty_state('clock-3', 'Not enough stage history', 'Velocity appears once candidates move between stages.') }}{% endif %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Interviewer completion</h2><p class="mt-1 text-xs text-slate-500">Submitted scorecards vs invitations</p></div>{{ icon('clipboard-check', 'icon-lg text-slate-400') }}</div>
+    <div class="space-y-5 p-5">
+      <div class="flex items-baseline justify-between"><span class="stat-label">Completion</span><span class="text-2xl font-extrabold tracking-[-0.04em] text-slate-950">{{ (report.interviewer_completion.completion_rate ~ '%') if report.interviewer_completion.completion_rate is not none else '—' }}</span></div>
+      <dl class="grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 text-center">
+        <div><dt class="text-[11px] font-semibold text-slate-500">Interviews</dt><dd class="mt-1 text-lg font-extrabold text-slate-950">{{ report.interviewer_completion.interviews }}</dd></div>
+        <div><dt class="text-[11px] font-semibold text-slate-500">Submitted</dt><dd class="mt-1 text-lg font-extrabold text-slate-950">{{ report.interviewer_completion.submitted }}</dd></div>
+        <div><dt class="text-[11px] font-semibold text-slate-500">Overdue</dt><dd class="mt-1 text-lg font-extrabold {{ 'text-rose-700' if report.interviewer_completion.overdue else 'text-slate-950' }}">{{ report.interviewer_completion.overdue }}</dd></div>
+      </dl>
+    </div>
+  </section>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-2">
+  <section class="panel overflow-hidden">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Source quality</h2><p class="mt-1 text-xs text-slate-500">Volume and hire rate per channel</p></div></div>
+    <div class="table-wrap">
+      <table class="data-table data-table--responsive">
+        <thead><tr><th>Source</th><th>Applications</th><th>Active</th><th>Hired</th><th>Hire rate</th></tr></thead>
+        <tbody>
+          {% for row in report.source_quality %}
+          <tr>
+            <td data-label="Source" class="font-extrabold text-slate-950">{{ row.source }}</td>
+            <td data-label="Applications" class="font-bold text-slate-950">{{ row.total }}</td>
+            <td data-label="Active">{{ row.active }}</td>
+            <td data-label="Hired">{{ row.hired }}</td>
+            <td data-label="Hire rate">{{ row.hire_rate }}%</td>
+          </tr>
+          {% else %}<tr><td colspan="5">{{ empty_state('users', 'No source data', 'Sources are captured with each application.') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel overflow-hidden">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Aging candidates</h2><p class="mt-1 text-xs text-slate-500">Active applications longest in their current stage</p></div>{{ icon('triangle-alert', 'icon-lg text-slate-400') }}</div>
+    <div class="table-wrap">
+      <table class="data-table data-table--responsive">
+        <thead><tr><th>Candidate</th><th>Stage</th><th>Days in stage</th><th>SLA</th></tr></thead>
+        <tbody>
+          {% for row in report.aging %}
+          <tr>
+            <td data-label="Candidate">
+              <a class="font-extrabold text-slate-950 hover:text-brand-700" href="{{ url('candidate-detail', organization_slug=organization.slug, candidate_id=row.application.candidate_id) }}">{{ row.application.candidate }}</a>
+              <div class="mt-1 text-xs text-slate-500">{{ row.application.job.title }}</div>
+            </td>
+            <td data-label="Stage">{{ row.application.current_stage.name }}</td>
+            <td data-label="Days in stage" class="font-bold {{ 'text-rose-700' if row.overdue else 'text-slate-950' }}">{{ row.days_in_stage }}</td>
+            <td data-label="SLA">{% if row.sla_hours %}{{ row.sla_hours }}h{% if row.overdue %} <span class="badge-rejected ml-1">Breached</span>{% endif %}{% else %}<span class="text-slate-400">Not set</span>{% endif %}</td>
+          </tr>
+          {% else %}<tr><td colspan="4">{{ empty_state('users', 'Nothing aging', 'No active applications in the pipeline.') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="mt-6 flex items-start gap-2 text-xs leading-5 text-slate-500">{{ icon('info', 'icon-sm') }}<span>Reports respect your role scope: a recruiter limited to a department sees only that department. Exports are written to the audit log with the row count and range.</span></p>
+{% endblock %}

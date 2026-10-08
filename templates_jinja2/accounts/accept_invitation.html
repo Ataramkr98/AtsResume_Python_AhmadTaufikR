@@ -1,0 +1,7 @@
+{% extends "layouts/auth.html" %}
+{% from "components/ui.html" import icon, field %}
+{% block title %}Accept invitation · Aster ATS{% endblock %}
+{% block content %}
+<div class="mb-8"><div class="brand-mark mb-5"><i data-lucide="user-plus" class="icon-lg"></i></div><p class="eyebrow">Invitation</p><h1 class="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-slate-950">Join {{ invitation.organization.name }}</h1><p class="mt-2 text-sm leading-6 text-slate-500">You were invited as {{ invitation.get_role_display() }}.</p></div>
+<form method="post" class="form-shell">{{ csrf_input }}{% if form.non_field_errors() %}<div class="alert alert-error mb-5">{{ icon('circle-alert', 'icon-sm') }}<span>{{ form.non_field_errors() }}</span></div>{% endif %}{{ field(form.full_name) }}{{ field(form.password) }}<button class="btn-primary mt-6 w-full" type="submit">{{ icon('user-plus', 'icon-sm') }}<span>Create account</span></button></form>
+{% endblock %}

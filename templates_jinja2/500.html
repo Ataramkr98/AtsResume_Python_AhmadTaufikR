@@ -1,0 +1,9 @@
+{% extends "layouts/error.html" %}
+{% block title %}Something went wrong · Aster ATS{% endblock %}
+{% block eyebrow %}Error 500{% endblock %}
+{% block heading %}Something went wrong on our side.{% endblock %}
+{% block message %}The request was logged with a trace ID and the team has been notified. Nothing you submitted was lost — please try again.{% endblock %}
+{% block actions %}
+  <a href="{{ url('home') }}" class="btn-primary justify-center px-5 py-3">Back to the homepage</a>
+  <a href="{{ url('app-entry') }}" class="btn-secondary justify-center px-5 py-3">Open the workspace</a>
+{% endblock %}

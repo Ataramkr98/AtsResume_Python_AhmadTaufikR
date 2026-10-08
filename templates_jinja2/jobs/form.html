@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, field %}
+{% block title %}{{ form_title }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl">
+  {% if job %}
+  <a href="{{ url('job-detail', organization_slug=organization.slug, job_id=job.id) }}" class="breadcrumb">{{ icon('arrow-left', 'icon-sm') }}<span>Back to job</span></a>
+  {% else %}
+  <a href="{{ url('jobs', organization_slug=organization.slug) }}" class="breadcrumb">{{ icon('arrow-left', 'icon-sm') }}<span>Back to jobs</span></a>
+  {% endif %}
+  <div class="mt-5"><p class="eyebrow">{{ form_eyebrow }}</p><h1 class="page-title mt-1">{{ form_title }}</h1><p class="page-subtitle">Configure ownership, requirements, and the hiring workflow.</p></div>
+  <form method="post" class="form-shell mt-7 space-y-5">{{ csrf_input }}
+    <section class="panel p-6 sm:p-7"><div class="mb-6 flex items-start gap-3"><div class="stat-icon">{{ icon('briefcase', 'icon-lg') }}</div><div><h2 class="font-extrabold text-slate-950">Role details</h2><p class="mt-1 text-xs leading-5 text-slate-500">Give candidates and your team the context they need.</p></div></div><div class="grid gap-5 sm:grid-cols-2">{{ field(form.title, 'sm:col-span-2') }}{{ field(form.department) }}{{ field(form.location) }}{{ field(form.employment_type) }}{{ field(form.headcount) }}</div></section>
+    <section class="panel p-6 sm:p-7"><div class="mb-6 flex items-start gap-3"><div class="stat-icon">{{ icon('users', 'icon-lg') }}</div><div><h2 class="font-extrabold text-slate-950">Hiring ownership</h2><p class="mt-1 text-xs leading-5 text-slate-500">Set the people and workflow that will own this opening.</p></div></div><div class="grid gap-5 sm:grid-cols-2">{{ field(form.hiring_manager) }}{{ field(form.recruiter) }}{{ field(form.pipeline_template, 'sm:col-span-2') }}</div></section>
+    <section class="panel p-6 sm:p-7"><div class="mb-6 flex items-start gap-3"><div class="stat-icon">{{ icon('file-text', 'icon-lg') }}</div><div><h2 class="font-extrabold text-slate-950">Requirements</h2><p class="mt-1 text-xs leading-5 text-slate-500">Describe the role and the experience that will help someone succeed.</p></div></div><div class="space-y-5">{{ field(form.description_html) }}{{ field(form.requirements_html) }}<div class="grid gap-5 sm:grid-cols-2">{{ field(form.min_experience_months) }}{{ field(form.education_level) }}</div></div></section>
+    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      {% if job %}<a href="{{ url('job-detail', organization_slug=organization.slug, job_id=job.id) }}" class="btn-secondary">Cancel</a>
+      {% else %}<a href="{{ url('jobs', organization_slug=organization.slug) }}" class="btn-secondary">Cancel</a>{% endif %}
+      <button class="btn-primary" type="submit">{{ icon('file-check-2', 'icon-sm') }}<span>{{ submit_label }}</span></button>
+    </div>
+  </form>
+</div>
+{% endblock %}

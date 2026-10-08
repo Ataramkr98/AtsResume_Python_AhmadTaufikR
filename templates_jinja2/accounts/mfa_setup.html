@@ -1,0 +1,8 @@
+{% extends "layouts/auth.html" %}
+{% from "components/ui.html" import icon, field %}
+{% block title %}Secure your account · Aster ATS{% endblock %}
+{% block content %}
+<div class="mb-8"><div class="brand-mark mb-5"><i data-lucide="shield-check" class="icon-lg"></i></div><p class="eyebrow">Account security</p><h1 class="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-slate-950">Set up multi-factor authentication</h1><p class="mt-3 text-sm leading-6 text-slate-500">Add this account to your authenticator app using the setup address below, then enter the current code.</p></div>
+<div class="flex items-start gap-3 rounded-[10px] bg-slate-950 p-4 text-xs leading-5 text-slate-200">{{ icon('key-round', 'icon-lg') }}<code class="min-w-0 break-all">{{ device.config_url }}</code></div>
+<form method="post" class="form-shell mt-6">{{ csrf_input }}{% if form.non_field_errors() %}<div class="alert alert-error mb-5">{{ icon('circle-alert', 'icon-sm') }}<span>{{ form.non_field_errors() }}</span></div>{% endif %}{{ field(form.token) }}<button class="btn-primary mt-6 w-full" type="submit">{{ icon('shield-check', 'icon-sm') }}<span>Confirm authenticator</span></button></form>
+{% endblock %}

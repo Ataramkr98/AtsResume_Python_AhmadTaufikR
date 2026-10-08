@@ -1,0 +1,96 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, empty_state, pagination %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Follow-ups</p>
+    <h1 class="page-title mt-1">Tasks</h1>
+    <p class="page-subtitle">Keep recruiter follow-ups, reminders and hand-offs from slipping.</p>
+  </div>
+  {% if can_manage %}<a class="btn-primary" href="{{ url('task-create', organization_slug=organization.slug) }}">{{ icon('plus', 'icon-sm') }}<span>New task</span></a>{% endif %}
+</div>
+
+<section class="mt-7 grid gap-4 sm:grid-cols-3" aria-label="Task totals">
+  {% for label, value, note, icon_name in [
+    ('Open tasks', counts.open, 'Assigned and in progress', 'clipboard-check'),
+    ('Overdue', counts.overdue, 'Past their due date', 'triangle-alert'),
+    ('Assigned to me', counts.mine, 'Your open items', 'circle-user')
+  ] %}
+  <div class="stat-tile">
+    <div class="flex items-start justify-between gap-3"><span class="stat-icon {{ 'bg-rose-50 text-rose-700' if label == 'Overdue' and value else '' }}">{{ icon(icon_name, 'icon-lg') }}</span><span class="stat-label">{{ label }}</span></div>
+    <div><div class="stat-value">{{ value }}</div><div class="stat-note">{{ note }}</div></div>
+  </div>
+  {% endfor %}
+</section>
+
+<form class="toolbar mt-5">
+  <div class="relative min-w-0 flex-1"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{{ icon('search', 'icon-sm') }}</span><input class="pl-9" name="q" value="{{ query }}" placeholder="Search tasks" aria-label="Search tasks"></div>
+  <select name="status" aria-label="Filter by status">
+    <option value="">All statuses</option>
+    <option value="open" {{ 'selected' if status_filter == 'open' else '' }}>Open and in progress</option>
+    {% for value, label in [('OPEN','Open'),('IN_PROGRESS','In progress'),('DONE','Done'),('CANCELLED','Cancelled')] %}
+    <option value="{{ value }}" {{ 'selected' if status_filter == value else '' }}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="assignee" aria-label="Filter by assignee">
+    <option value="">Everyone</option>
+    <option value="me" {{ 'selected' if assignee_filter == 'me' else '' }}>Assigned to me</option>
+    {% for row in assignees %}<option value="{{ row.user_id }}" {{ 'selected' if assignee_filter == row.user_id|string else '' }}>{{ row.user.full_name }}</option>{% endfor %}
+  </select>
+  <button class="btn-secondary" type="submit">{{ icon('filter', 'icon-sm') }}<span>Filter</span></button>
+</form>
+
+<section class="panel mt-5 overflow-hidden">
+  <div class="table-wrap">
+    <table class="data-table data-table--responsive">
+      <thead><tr><th>Task</th><th>Assignee</th><th>Related to</th><th>Due</th><th>Priority</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for task in page %}
+        <tr>
+          <td data-label="Task">
+            <div class="font-extrabold text-slate-950">{{ task.title }}</div>
+            {% if task.description %}<div class="mt-1 line-clamp-2 max-w-md text-xs leading-5 text-slate-500">{{ task.description }}</div>{% endif %}
+          </td>
+          <td data-label="Assignee">{{ task.assignee.full_name }}</td>
+          <td data-label="Related to">
+            {% if task.application %}
+              <a class="font-bold text-brand-700 hover:text-brand-800" href="{{ url('candidate-detail', organization_slug=organization.slug, candidate_id=task.application.candidate_id) }}">{{ task.application.candidate }}</a>
+              <div class="mt-1 text-xs text-slate-500">{{ task.application.job.title }}</div>
+            {% elif task.job %}
+              <a class="font-bold text-brand-700 hover:text-brand-800" href="{{ url('job-detail', organization_slug=organization.slug, job_id=task.job_id) }}">{{ task.job.title }}</a>
+            {% else %}<span class="text-xs text-slate-400">Workspace</span>{% endif %}
+          </td>
+          <td data-label="Due">
+            {% if task.due_at %}
+              <span class="{{ 'font-bold text-rose-700' if task.is_overdue else 'text-slate-700' }}">{{ task.due_at.strftime('%b %d, %Y') }}</span>
+              {% if task.is_overdue %}<div class="mt-1 text-xs font-bold text-rose-700">Overdue</div>{% endif %}
+            {% else %}<span class="text-xs text-slate-400">No due date</span>{% endif %}
+          </td>
+          <td data-label="Priority">
+            {% set priority_class = {'URGENT': 'badge-rejected', 'HIGH': 'badge-paused', 'NORMAL': 'badge-draft', 'LOW': 'badge-archived'} %}
+            <span class="{{ priority_class.get(task.priority, 'badge-draft') }}"><span class="badge-dot"></span>{{ task.get_priority_display() }}</span>
+          </td>
+          <td data-label="Status">
+            {% if can_manage %}
+            <form method="post" action="{{ url('task-status', organization_slug=organization.slug, task_id=task.id) }}">
+              {{ csrf_input }}
+              <label class="sr-only" for="status-{{ task.id }}">Status for {{ task.title }}</label>
+              <select id="status-{{ task.id }}" name="status" class="mt-0 py-1.5 text-xs" onchange="this.form.submit()">
+                {% for value, label in [('OPEN','Open'),('IN_PROGRESS','In progress'),('DONE','Done'),('CANCELLED','Cancelled')] %}
+                <option value="{{ value }}" {{ 'selected' if task.status == value else '' }}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </form>
+            {% else %}<span class="badge-draft"><span class="badge-dot"></span>{{ task.get_status_display() }}</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">{{ empty_state('clipboard-check', 'No tasks match this view', 'Create a task to track a follow-up, or clear the filters.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {{ pagination(page, querystring) }}
+</section>
+{% endblock %}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="icon" href="{{ static('favicon.svg') }}" type="image/svg+xml">
+  <title>{% block title %}ATS{% endblock %} · {{ organization.name }}</title>
+  <link rel="stylesheet" href="{{ static('css/app.css') }}?v=navy-cobalt-20260823">
+  <script src="{{ static('js/app.js') }}?v=navy-cobalt-20260823" defer></script>
+</head>
+<body class="min-h-full">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-[70] focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold">Skip to content</a>
+  <div class="app-shell">
+    <div class="app-sidebar-backdrop" data-mobile-nav-backdrop hidden></div>
+    <aside id="main-navigation" class="app-sidebar" data-mobile-nav aria-label="Main navigation" aria-hidden="false">
+      <div class="flex items-center justify-between">
+        <a href="{{ url('dashboard', organization_slug=organization.slug) }}" class="brand-lockup" aria-label="Aster ATS overview">
+          <span class="brand-mark"><i data-lucide="scan-text" class="icon-lg"></i></span>
+          <span class="min-w-0"><span class="brand-name block">Aster ATS</span><span class="brand-meta block">{{ organization.name }}</span></span>
+        </a>
+        <button type="button" class="btn-quiet sidebar-close p-2 lg:hidden" data-mobile-nav-close aria-label="Close navigation"><i data-lucide="x" class="icon"></i></button>
+      </div>
+      <nav class="mt-5" aria-label="Workspace">
+        <p class="nav-section-label mt-0">Workspace</p>
+        <div class="space-y-1">
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'dashboard' else '' }}" href="{{ url('dashboard', organization_slug=organization.slug) }}"><i data-lucide="layout-dashboard" class="icon"></i><span>Overview</span></a>
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'jobs' else '' }}" href="{{ url('jobs', organization_slug=organization.slug) }}"><i data-lucide="briefcase" class="icon"></i><span>Jobs</span></a>
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'candidates' else '' }}" href="{{ url('candidates', organization_slug=organization.slug) }}"><i data-lucide="users" class="icon"></i><span>Candidates</span></a>
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'pipeline' else '' }}" href="{{ url('pipeline', organization_slug=organization.slug) }}"><i data-lucide="columns-3" class="icon"></i><span>Pipeline</span></a>
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'interviews' else '' }}" href="{{ url('interviews', organization_slug=organization.slug) }}"><i data-lucide="calendar-days" class="icon"></i><span>Interviews</span></a>
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'tasks' else '' }}" href="{{ url('tasks', organization_slug=organization.slug) }}"><i data-lucide="clipboard-check" class="icon"></i><span>Tasks</span></a>
+        </div>
+        {% if membership.role in ['ORG_ADMIN', 'HR_ADMIN', 'AUDITOR'] %}
+        <p class="nav-section-label">Insights</p>
+        <div class="space-y-1">
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'reports' else '' }}" href="{{ url('reports', organization_slug=organization.slug) }}"><i data-lucide="chart-column" class="icon"></i><span>Reports</span></a>
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'audit' else '' }}" href="{{ url('audit-log', organization_slug=organization.slug) }}"><i data-lucide="scroll-text" class="icon"></i><span>Audit log</span></a>
+        </div>
+        {% endif %}
+        <p class="nav-section-label">Account</p>
+        <div class="space-y-1">
+          {% if membership.role in ['ORG_ADMIN', 'HR_ADMIN'] %}
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'settings' else '' }}" href="{{ url('organization-settings', organization_slug=organization.slug) }}"><i data-lucide="building-2" class="icon"></i><span>Organization</span></a>
+          {% endif %}
+          <a class="nav-link {{ 'nav-link-active' if active_nav == 'profile' else '' }}" href="{{ url('profile', organization_slug=organization.slug) }}"><i data-lucide="circle-user" class="icon"></i><span>Your profile</span></a>
+        </div>
+      </nav>
+      <div class="sidebar-account">
+        <div class="flex items-center gap-3">
+          <div class="avatar">{{ request.user.full_name[:1] }}</div>
+          <div class="min-w-0"><div class="sidebar-account-name">{{ request.user.full_name }}</div><div class="sidebar-account-role">{{ membership.get_role_display() }}</div></div>
+        </div>
+        <form method="post" action="{{ url('logout') }}" class="mt-2">{{ csrf_input }}<button class="btn-quiet" type="submit"><i data-lucide="log-out" class="icon-sm"></i><span>Sign out</span></button></form>
+      </div>
+    </aside>
+    <div class="app-main">
+      <header class="app-topbar">
+        <div class="flex items-center gap-3">
+          <button type="button" class="btn-secondary p-2 lg:hidden" data-mobile-nav-toggle aria-controls="main-navigation" aria-expanded="false" aria-label="Open navigation"><i data-lucide="menu" class="icon"></i></button>
+          <span class="hidden text-[13px] font-semibold text-slate-500 sm:block">Structured hiring workspace</span>
+        </div>
+        <a href="{{ url('public-jobs', organization_slug=organization.slug) }}" class="btn-quiet px-2 text-xs sm:px-3"><span>Careers page</span><i data-lucide="external-link" class="icon-sm"></i></a>
+      </header>
+      <main id="main" class="app-content">
+        {% for message in get_messages(request) %}
+          <div class="alert {{ 'alert-error' if message.tags == 'error' else 'alert-success' }} mb-5" role="status"><i data-lucide="{{ 'circle-alert' if message.tags == 'error' else 'check-circle-2' }}" class="icon-lg"></i><span>{{ message }}</span></div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

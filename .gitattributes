@@ -1,0 +1,23 @@
+# Normalise line endings so the same file checks out identically on Linux, macOS and Windows.
+# Without this, a Windows contributor silently rewrites every line of a file they touch.
+* text=auto eol=lf
+
+# Binary assets must never be touched.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+*.woff binary
+*.pdf binary
+*.docx binary
+
+# Keep the shell entrypoint executable when checked out on a POSIX filesystem.
+Dockerfile text eol=lf
+*.sh text eol=lf
+
+# Generated build output and collected static files are reproducible artefacts.
+static_dist/** linguist-generated=true
+staticfiles/** linguist-generated=true
+static_dist/** -diff
+staticfiles/** -diff

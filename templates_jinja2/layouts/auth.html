@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ static('favicon.svg') }}" type="image/svg+xml">
+  <title>{% block title %}Aster ATS{% endblock %}</title>
+  <link rel="stylesheet" href="{{ static('css/app.css') }}?v=navy-cobalt-20260823">
+  <script src="{{ static('js/app.js') }}?v=navy-cobalt-20260823" defer></script>
+</head>
+<body class="auth-page">
+  <main class="auth-layout">
+    <aside class="auth-aside"><a href="{{ url('login') }}" class="flex items-center gap-3 text-white"><span class="brand-mark bg-white text-navy"><i data-lucide="scan-text" class="icon-lg"></i></span><span class="text-sm font-extrabold tracking-[-0.02em]">Aster ATS</span></a><div class="auth-aside-copy"><p class="eyebrow text-brand-300">Structured hiring workspace</p><h2>Make every hiring decision easier to explain.</h2><p>A calm, focused workspace for openings, candidates, interviews, and evidence-led feedback.</p></div><p class="text-xs text-slate-400">Aster ATS · Secure by design</p></aside>
+    <section class="auth-card-shell"><div class="auth-card">{% block content %}{% endblock %}</div></section>
+  </main>
+</body>
+</html>

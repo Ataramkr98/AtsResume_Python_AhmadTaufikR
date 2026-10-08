@@ -1,0 +1,138 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, empty_state %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Overview</p>
+    <h1 class="page-title mt-1">Good day, {{ request.user.full_name.split(' ')[0] }}</h1>
+    <p class="page-subtitle">Here is what needs attention across your hiring work.</p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="{{ url('reports', organization_slug=organization.slug) }}" class="btn-secondary">{{ icon('chart-column', 'icon-sm') }}<span>Reports</span></a>
+    {% if can_manage_jobs %}<a href="{{ url('job-create', organization_slug=organization.slug) }}" class="btn-primary">{{ icon('plus', 'icon-sm') }}<span>Create job</span></a>{% endif %}
+  </div>
+</div>
+
+<section class="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+  {% for label, value, note, icon_name in [
+    ('Open jobs', open_jobs, 'Published roles', 'briefcase'),
+    ('Active candidates', active_candidates, 'Across all pipelines', 'users'),
+    ('Interviews this week', weekly_interviews, 'Scheduled', 'calendar-days'),
+    ('Parsing failures', parsing_failures, 'Need review', 'circle-alert')
+  ] %}
+  <div class="stat-tile">
+    <div class="flex items-start justify-between gap-3"><span class="stat-icon">{{ icon(icon_name, 'icon-lg') }}</span><span class="stat-label">{{ label }}</span></div>
+    <div><div class="stat-value">{{ value }}</div><div class="stat-note">{{ note }}</div></div>
+  </div>
+  {% endfor %}
+</section>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-5">
+  <section class="panel xl:col-span-3">
+    <div class="panel-header">
+      <div><h2 class="font-extrabold text-slate-950">Hiring funnel</h2><p class="mt-1 text-xs text-slate-500">Distinct applications that reached each stage, last 90 days</p></div>
+      <a href="{{ url('pipeline', organization_slug=organization.slug) }}" class="btn-quiet px-2 text-xs">Open pipeline {{ icon('arrow-right', 'icon-sm') }}</a>
+    </div>
+    <div class="p-5">
+      {% if funnel %}
+      <div class="h-[240px]"><canvas data-chart="funnel" aria-label="Applications by stage" role="img"></canvas></div>
+      <script type="application/json" data-chart-data="funnel">{{ chart_data.funnel|tojson }}</script>
+      <div class="mt-5 space-y-4 border-t border-slate-100 pt-5">
+        {% for row in funnel %}
+        <div>
+          <div class="mb-2 flex items-baseline justify-between gap-3 text-sm">
+            <span class="font-semibold text-slate-700">{{ row.stage }}</span>
+            <span class="flex items-baseline gap-2">
+              <strong class="text-slate-950">{{ row.count }}</strong>
+              <span class="text-xs font-semibold text-slate-400">{{ row.of_total }}% of applied{% if row.step_conversion is not none %} · {{ row.step_conversion }}% step{% endif %}</span>
+            </span>
+          </div>
+          <div class="h-2 overflow-hidden rounded-full bg-slate-100" role="presentation">
+            <div class="h-2 rounded-full bg-brand-500" style="width: {{ row.of_total }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}{{ empty_state('columns-3', 'Your funnel is ready', 'Applications will appear here after a job is published.', 'py-8') }}{% endif %}
+    </div>
+  </section>
+
+  <section class="panel xl:col-span-2">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Upcoming interviews</h2><p class="mt-1 text-xs text-slate-500">Next on the agenda</p></div>{{ icon('calendar-days', 'icon-lg text-slate-400') }}</div>
+    <div class="divide-y divide-slate-100">
+      {% for interview in upcoming %}<a href="{{ url('scorecard', organization_slug=organization.slug, interview_id=interview.id) }}" class="block p-5 hover:bg-slate-50"><div class="text-sm font-extrabold text-slate-950">{{ interview.application.candidate }}</div><div class="mt-1 text-xs text-slate-500">{{ interview.application.job.title }}</div><div class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-brand-700">{{ icon('clock-3', 'icon-sm') }}{{ interview.start_at.strftime('%b %d · %H:%M') }} UTC</div></a>
+      {% else %}{{ empty_state('calendar-days', 'No upcoming interviews', 'Schedule one from a candidate application.', 'py-10') }}{% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-3">
+  <section class="panel xl:col-span-2">
+    <div class="panel-header">
+      <div><h2 class="font-extrabold text-slate-950">My tasks</h2><p class="mt-1 text-xs text-slate-500">{{ open_task_count }} open · {{ overdue_task_count }} overdue across the workspace</p></div>
+      <a href="{{ url('tasks', organization_slug=organization.slug) }}" class="btn-quiet px-2 text-xs">All tasks {{ icon('arrow-right', 'icon-sm') }}</a>
+    </div>
+    <div class="divide-y divide-slate-100">
+      {% for task in my_tasks %}
+      <div class="flex items-start gap-4 px-5 py-4">
+        <div class="min-w-0 flex-1">
+          <div class="truncate text-sm font-extrabold text-slate-950">{{ task.title }}</div>
+          <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+            {% if task.job %}<span>{{ task.job.title }}</span>{% endif %}
+            {% if task.application %}<span>{{ task.application.candidate }}</span>{% endif %}
+            {% if task.due_at %}<span class="{{ 'font-bold text-rose-700' if task.is_overdue else '' }}">Due {{ task.due_at.strftime('%b %d') }}{{ ' · overdue' if task.is_overdue else '' }}</span>{% endif %}
+          </div>
+        </div>
+        <form method="post" action="{{ url('task-status', organization_slug=organization.slug, task_id=task.id) }}" class="shrink-0">
+          <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+          <input type="hidden" name="status" value="DONE">
+          <button type="submit" class="btn-quiet px-2 text-xs">{{ icon('check', 'icon-sm') }}<span>Done</span></button>
+        </form>
+      </div>
+      {% else %}{{ empty_state('list-checks', 'No tasks assigned to you', 'Create a follow-up so nothing slips through the cracks.', 'py-10') }}{% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Time to hire</h2><p class="mt-1 text-xs text-slate-500">Application to hired</p></div>{{ icon('clock-3', 'icon-lg text-slate-400') }}</div>
+    <div class="space-y-5 p-5">
+      <div><div class="stat-label">Average</div><div class="stat-value">{{ (time_to_hire.average_days ~ 'd') if time_to_hire.average_days is not none else '—' }}</div></div>
+      <div><div class="stat-label">Median</div><div class="stat-value">{{ (time_to_hire.median_days ~ 'd') if time_to_hire.median_days is not none else '—' }}</div></div>
+      <p class="border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">Based on {{ time_to_hire.count }} completed hire{{ '' if time_to_hire.count == 1 else 's' }} in the last 90 days.</p>
+    </div>
+  </section>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-2">
+  <section class="panel overflow-hidden">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Aging candidates</h2><p class="mt-1 text-xs text-slate-500">Active applications longest in their current stage</p></div>{{ icon('triangle-alert', 'icon-lg text-slate-400') }}</div>
+    <div class="table-wrap">
+      <table class="data-table data-table--responsive">
+        <thead><tr><th>Candidate</th><th>Stage</th><th>Days</th><th>SLA</th></tr></thead>
+        <tbody>
+          {% for row in aging %}
+          <tr>
+            <td data-label="Candidate">
+              <a class="font-extrabold text-slate-950 hover:text-brand-700" href="{{ url('candidate-detail', organization_slug=organization.slug, candidate_id=row.application.candidate_id) }}">{{ row.application.candidate }}</a>
+              <div class="mt-1 text-xs text-slate-500">{{ row.application.job.title }}</div>
+            </td>
+            <td data-label="Stage">{{ row.application.current_stage.name }}</td>
+            <td data-label="Days" class="font-bold {{ 'text-rose-700' if row.overdue else 'text-slate-950' }}">{{ row.days_in_stage }}</td>
+            <td data-label="SLA">{% if row.sla_hours %}{{ row.sla_hours }}h{% if row.overdue %} <span class="badge-rejected ml-1">Breached</span>{% endif %}{% else %}<span class="text-slate-400">Not set</span>{% endif %}</td>
+          </tr>
+          {% else %}<tr><td colspan="4">{{ empty_state('users', 'Nothing aging', 'No active applications in the pipeline.') }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header"><div><h2 class="font-extrabold text-slate-950">Recent activity</h2><p class="mt-1 text-xs text-slate-500">Audited changes across the workspace</p></div>{{ icon('scroll-text', 'icon-lg text-slate-400') }}</div>
+    <div class="divide-y divide-slate-100">
+      {% for event in activity %}<div class="flex items-start gap-4 px-5 py-4"><span class="timeline-dot"></span><div class="min-w-0 flex-1"><div class="truncate text-sm text-slate-700"><strong class="font-extrabold text-slate-950">{{ event.actor or 'System' }}</strong> <span class="text-slate-400">·</span> {{ event.action.replace('.', ' ') }}</div><div class="mt-1 text-xs text-slate-400">{{ event.created_at.strftime('%b %d, %H:%M') }} · {{ event.resource_type }}</div></div></div>
+      {% else %}{{ empty_state('scroll-text', 'No recorded activity yet', 'Workspace changes will appear here.', 'py-10') }}{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% macro icon(name, class_name='icon', label='') -%}
+<i data-lucide="{{ name }}" class="{{ class_name }}"{% if label %} aria-label="{{ label }}"{% endif %}></i>
+{%- endmacro %}
+
+{% macro field(field, class_name='') -%}
+<div class="field {{ class_name }}">
+  {{ field.label_tag() }}
+  {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+  {{ field }}
+  {% if field.errors %}<ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro empty_state(icon_name, title, description='', class_name='') -%}
+<div class="empty-state {{ class_name }}">
+  <div class="empty-state-icon">{{ icon(icon_name) }}</div>
+  <h2 class="text-base font-extrabold text-slate-900">{{ title }}</h2>
+  {% if description %}<p class="mt-2 max-w-sm text-sm leading-6 text-slate-500">{{ description }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro status_badge(status, label) -%}
+<span class="badge-{{ status|lower }}"><span class="badge-dot"></span>{{ label }}</span>
+{%- endmacro %}
+
+{% macro pagination(page, querystring) -%}
+{% if page.paginator.num_pages > 1 %}
+{% set base = ('?' ~ querystring ~ '&') if querystring else '?' %}
+<nav class="pagination" aria-label="Pagination">
+  <p class="text-xs font-semibold text-slate-500">
+    Showing {{ page.start_index() }}–{{ page.end_index() }} of {{ page.paginator.count }}
+  </p>
+  <div class="pagination-pages">
+    <a class="pagination-link {{ 'pagination-link-disabled' if not page.has_previous() else '' }}"
+       href="{{ base }}page={{ page.previous_page_number() if page.has_previous() else 1 }}"
+       {% if not page.has_previous() %}aria-disabled="true" tabindex="-1"{% endif %} rel="prev">Previous</a>
+    {% for number in page.paginator.page_range %}
+      {% if number == page.number %}
+        <span class="pagination-link pagination-link-active" aria-current="page">{{ number }}</span>
+      {% elif number >= page.number - 2 and number <= page.number + 2 %}
+        <a class="pagination-link" href="{{ base }}page={{ number }}">{{ number }}</a>
+      {% endif %}
+    {% endfor %}
+    <a class="pagination-link {{ 'pagination-link-disabled' if not page.has_next() else '' }}"
+       href="{{ base }}page={{ page.next_page_number() if page.has_next() else page.number }}"
+       {% if not page.has_next() %}aria-disabled="true" tabindex="-1"{% endif %} rel="next">Next</a>
+  </div>
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{% macro metric(label, value, note='') -%}
+<div class="stat-tile">
+  <div class="stat-label">{{ label }}</div>
+  <div>
+    <div class="stat-value">{{ value }}</div>
+    {% if note %}<div class="stat-note">{{ note }}</div>{% endif %}
+  </div>
+</div>
+{%- endmacro %}

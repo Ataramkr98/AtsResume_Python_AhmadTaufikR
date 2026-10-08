@@ -1,0 +1,4 @@
+{% extends "layouts/public.html" %}
+{% from "components/ui.html" import icon %}
+{% block title %}Application received{% endblock %}
+{% block content %}<div class="mx-auto max-w-xl px-5 py-24 text-center"><div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-700">{{ icon('check-circle-2', 'icon-lg') }}</div><p class="eyebrow mt-7">Application received</p><h1 class="mt-2 text-3xl font-extrabold tracking-[-0.05em] text-slate-950">Thank you for applying.</h1><p class="mt-4 text-sm leading-6 text-slate-500">Your application for {{ job.title }} has been securely submitted for review.</p><p class="mt-5 text-xs text-slate-400">Reference {{ reference }}</p><a href="{{ url('public-jobs', organization_slug=organization.slug) }}" class="btn-secondary mt-8">{{ icon('arrow-left', 'icon-sm') }}<span>View other roles</span></a></div>{% endblock %}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="icon" href="{{ static('favicon.svg') }}" type="image/svg+xml">
+  <title>{% block title %}Aster ATS{% endblock %}</title>
+  <meta name="description" content="{% block description %}Aster ATS is a tenant-aware applicant tracking system with deterministic resume parsing, explainable matching, structured scorecards and a full audit trail.{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{% block og_title %}Aster ATS — structured hiring workspace{% endblock %}">
+  <meta property="og:description" content="Tenant-aware applicant tracking with resume parsing, explainable matching, scorecards and audit.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="{{ static('css/app.css') }}?v=navy-cobalt-20260823">
+  <script src="{{ static('js/app.js') }}?v=navy-cobalt-20260823" defer></script>
+</head>
+<body class="bg-canvas">
+  <header class="marketing-header">
+    <div class="marketing-header-inner">
+      <a href="{{ url('home') }}" class="flex items-center gap-3" aria-label="Aster ATS home">
+        <span class="brand-mark h-8 w-8"><i data-lucide="scan-text" class="icon"></i></span>
+        <span class="text-sm font-extrabold tracking-[-0.02em] text-slate-950">Aster ATS</span>
+      </a>
+      <nav class="flex items-center gap-1 sm:gap-2" aria-label="Primary">
+        <a href="{{ url('home') }}#capabilities" class="btn-quiet hidden px-2 text-xs sm:inline-flex sm:px-3">Capabilities</a>
+        <a href="{{ url('home') }}#how-it-works" class="btn-quiet hidden px-2 text-xs sm:inline-flex sm:px-3">How it works</a>
+        {% if careers_url %}<a href="{{ careers_url }}" class="btn-quiet px-2 text-xs sm:px-3">Careers page</a>{% endif %}
+        <a href="{{ url('app-entry') }}" class="btn-primary px-3 py-2 text-xs sm:px-3.5 sm:text-[13px]">Open the app</a>
+      </nav>
+    </div>
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+  <footer class="marketing-footer">
+    <div class="marketing-footer-inner">
+      <div class="flex items-center gap-3">
+        <span class="brand-mark h-7 w-7"><i data-lucide="scan-text" class="icon-sm"></i></span>
+        <span class="text-xs font-bold text-slate-600">Aster ATS</span>
+      </div>
+      <p class="text-xs text-slate-500">Candidate data is encrypted, access-scoped and every sensitive change is audited.</p>
+    </div>
+  </footer>
+</body>
+</html>

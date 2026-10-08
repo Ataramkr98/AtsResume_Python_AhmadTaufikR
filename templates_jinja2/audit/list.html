@@ -1,0 +1,15 @@
+{% extends "layouts/app.html" %}
+{% from "components/ui.html" import icon, empty_state, pagination %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div><p class="eyebrow">Compliance</p><h1 class="page-title mt-1">Audit log</h1><p class="page-subtitle">Immutable record of sensitive access and workflow changes.</p></div>
+<form class="toolbar mt-7">
+  <div class="relative min-w-0 flex-1"><span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">{{ icon('search', 'icon-sm') }}</span><input class="pl-9" name="q" value="{{ query }}" placeholder="Search action, resource or actor" aria-label="Search audit events"></div>
+  <select name="action" aria-label="Filter by action">
+    <option value="">All actions</option>
+    {% for action in actions %}<option value="{{ action }}" {{ 'selected' if action_filter == action else '' }}>{{ action }}</option>{% endfor %}
+  </select>
+  <button class="btn-secondary" type="submit">{{ icon('filter', 'icon-sm') }}<span>Filter</span></button>
+</form>
+<section class="panel mt-5 overflow-hidden"><div class="table-wrap"><table class="data-table data-table--responsive"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Resource</th><th>Change</th></tr></thead><tbody>{% for event in page %}<tr><td data-label="When" class="whitespace-nowrap">{{ event.created_at.strftime('%b %d, %Y %H:%M') }}</td><td data-label="Actor">{{ event.actor or 'System' }}</td><td data-label="Action"><span class="font-extrabold text-slate-950">{{ event.action }}</span>{% if event.request_id %}<div class="mt-1 text-xs text-slate-400">{{ event.request_id[:8] }}</div>{% endif %}</td><td data-label="Resource">{{ event.resource_type }}<div class="mt-1 text-xs text-slate-400">{{ event.resource_id }}</div></td><td data-label="Change">{% if event.before or event.after %}<details><summary class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-extrabold text-brand-700">{{ icon('file-diff', 'icon-sm') }}<span>View change</span></summary><div class="mt-3 space-y-2"><div><p class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Before</p><pre class="mt-1 max-w-md overflow-auto rounded-[10px] bg-slate-950 p-3 text-xs leading-5 text-slate-200">{{ event.before }}</pre></div><div><p class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">After</p><pre class="mt-1 max-w-md overflow-auto rounded-[10px] bg-slate-950 p-3 text-xs leading-5 text-slate-200">{{ event.after }}</pre></div></div></details>{% else %}<span class="text-xs text-slate-400">No field diff</span>{% endif %}</td></tr>{% else %}<tr><td colspan="5">{{ empty_state('scroll-text', 'No audit events', 'Sensitive changes will appear here as the workspace is used.') }}</td></tr>{% endfor %}</tbody></table></div>{{ pagination(page, querystring) }}</section>
+{% endblock %}

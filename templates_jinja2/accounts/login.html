@@ -1,0 +1,8 @@
+{% extends "layouts/auth.html" %}
+{% from "components/ui.html" import icon, field %}
+{% block title %}Sign in · Aster ATS{% endblock %}
+{% block content %}
+<div class="mb-8"><div class="brand-mark mb-5"><i data-lucide="scan-text" class="icon-lg"></i></div><p class="eyebrow">Welcome back</p><h1 class="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-slate-950">Sign in to your workspace</h1><p class="mt-2 text-sm leading-6 text-slate-500">Use your work email and password to continue.</p></div>
+{% if form.non_field_errors() %}<div class="alert alert-error mb-5">{{ icon('circle-alert', 'icon-sm') }}<span>{{ form.non_field_errors() }}</span></div>{% endif %}
+<form method="post" class="form-shell">{{ csrf_input }}{{ field(form.username) }}{{ field(form.password) }}{{ field(form.otp_token) }}<button class="btn-primary mt-6 w-full" type="submit">{{ icon('arrow-right', 'icon-sm') }}<span>Sign in</span></button></form>
+{% endblock %}

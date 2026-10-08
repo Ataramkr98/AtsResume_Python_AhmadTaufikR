@@ -1,0 +1,9 @@
+{% extends "layouts/error.html" %}
+{% block title %}Page not found · Aster ATS{% endblock %}
+{% block eyebrow %}Error 404{% endblock %}
+{% block heading %}We couldn't find that page.{% endblock %}
+{% block message %}The link may be out of date, or the record may belong to a different workspace — or it may have been archived.{% endblock %}
+{% block actions %}
+  <a href="{{ url('home') }}" class="btn-primary justify-center px-5 py-3">Back to the homepage</a>
+  <a href="{{ url('app-entry') }}" class="btn-secondary justify-center px-5 py-3">Open the workspace</a>
+{% endblock %}

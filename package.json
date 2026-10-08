@@ -1,0 +1,25 @@
+{
+  "name": "ats-resume-parser-assets",
+  "private": true,
+  "scripts": {
+    "css": "tailwindcss -i ./assets/css/app.css -o ./static_dist/css/app.css --minify",
+    "css:watch": "tailwindcss -i ./assets/css/app.css -o ./static_dist/css/app.css --watch",
+    "js": "esbuild assets/js/app.js --bundle --minify --outfile=static_dist/js/app.js",
+    "js:watch": "esbuild assets/js/app.js --bundle --sourcemap --outfile=static_dist/js/app.js --watch",
+    "build": "npm run css && npm run js && npm run fonts",
+    "fonts": "node scripts/copy-fonts.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
+    "audit:prod": "npm audit --omit=dev"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "chart.js": "^4.4.0",
+    "lucide": "^1.33.0",
+    "sortablejs": "^1.15.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "esbuild": "^0.25.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

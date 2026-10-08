@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: ats_test
+          MYSQL_USER: ats
+          MYSQL_PASSWORD: ats
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      redis:
+        image: redis:8-alpine
+        ports: ["6379:6379"]
+    env:
+      DJANGO_SECRET_KEY: ci-only-secret
+      DATABASE_URL: mysql://ats:ats@127.0.0.1:3306/ats_test
+      REDIS_URL: redis://127.0.0.1:6379/0
+      CELERY_TASK_ALWAYS_EAGER: "true"
+      MALWARE_SCAN_REQUIRED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: python -m pip install -e ".[dev]"
+      - run: npm ci
+      - run: npm run audit:prod
+      - run: python -m ruff check .
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - run: python manage.py migrate --noinput
+      - run: python -m pytest -W error --cov --cov-report=term-missing --cov-fail-under=80
+      - run: npm run build
