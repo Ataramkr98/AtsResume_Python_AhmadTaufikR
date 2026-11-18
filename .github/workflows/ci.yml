@@ -15,6 +15,7 @@ jobs:
           MYSQL_USER: ats
           MYSQL_PASSWORD: ats
           MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_HOST: "%"
         ports: ["3306:3306"]
         options: >-
           --health-cmd="mysqladmin ping -h localhost -proot"
@@ -39,6 +40,15 @@ jobs:
           node-version: "24"
           cache: npm
       - run: python -m pip install -e ".[dev]"
+      - name: Grant access to the isolated Django test database
+        run: |
+          python - <<'PY'
+          import pymysql
+
+          with pymysql.connect(host='127.0.0.1', user='root', password='root', autocommit=True) as connection:
+              with connection.cursor() as cursor:
+                  cursor.execute("GRANT ALL PRIVILEGES ON `test_ats_test`.* TO 'ats'@'%'")
+          PY
       - run: npm ci
       - run: npm run audit:prod
       - run: python -m ruff check .
@@ -59,7 +69,7 @@ jobs:
           if report.exists():
               failures = ET.parse(report).getroot().findall('.//failure') + ET.parse(report).getroot().findall('.//error')
               for failure in failures[:3]:
-                  message = ((failure.get('message') or '') + '\n' + (failure.text or ''))[:3500]
+                  message = (failure.get('message') or '')[:300] + '\n' + (failure.text or '')[-3000:]
                   message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
                   print(f'::error title=Pytest failure::{message}')
           PY
