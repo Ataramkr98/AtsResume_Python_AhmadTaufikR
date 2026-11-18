@@ -239,6 +239,15 @@ function setupMobileNavigation() {
   });
 }
 
+function setupPipelineJobFilter() {
+  const select = document.querySelector("#pipeline-job");
+  if (!select) return;
+
+  select.addEventListener("change", () => {
+    if (select.value) window.location.assign(select.value);
+  });
+}
+
 /* ------------------------------------------------------------------- forms */
 
 function csrfToken() {
@@ -473,6 +482,7 @@ function boot(label, fn) {
 
 boot("icons", () => renderIcons());
 boot("mobile navigation", () => setupMobileNavigation());
+boot("pipeline job filter", () => setupPipelineJobFilter());
 boot("submit states", () => setupSubmitStates());
 boot("confirm dialogs", () => setupConfirmDialogs());
 boot("kanban", () => setupKanban());

@@ -28,6 +28,7 @@ urlpatterns = [
     path("app/<slug:organization_slug>/pipeline/<uuid:job_id>/", views.pipeline, name="pipeline-job"),
     path("app/<slug:organization_slug>/applications/<uuid:application_id>/move-stage/", views.move_stage_htmx, name="move-stage"),
     path("app/<slug:organization_slug>/applications/<uuid:application_id>/reject/", views.reject_htmx, name="reject-application"),
+    path("app/<slug:organization_slug>/applications/<uuid:application_id>/match/", views.application_match_refresh, name="application-match-refresh"),
     path("app/<slug:organization_slug>/interviews/", views.interviews_list, name="interviews"),
     path("app/<slug:organization_slug>/applications/<uuid:application_id>/interviews/new/", views.interview_create, name="interview-create"),
     path("app/<slug:organization_slug>/interviews/<uuid:interview_id>/scorecard/", views.scorecard, name="scorecard"),

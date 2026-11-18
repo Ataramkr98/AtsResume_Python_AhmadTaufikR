@@ -214,18 +214,17 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "ATS <noreply@ats.local>")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
 
-# Shared AI gateway (OpenAI-compatible). Match scoring stays on the deterministic
-# rules engine unless AI_NARRATIVE_SCORES is enabled; the credential lives only in
-# the environment and is never written to a log line.
-AI_BASE_URL = os.getenv("AI_BASE_URL", "https://ai.autoapp.biz.id/v1")
-AI_API_KEY = os.getenv("AI_API_KEY", "")
-AI_TIMEOUT_SECONDS = int(os.getenv("AI_TIMEOUT_SECONDS", "60"))
-AI_MAX_RETRIES = int(os.getenv("AI_MAX_RETRIES", "2"))
-AI_MODEL_DEFAULT = os.getenv("AI_MODEL_DEFAULT", "minimax-m3")
+# Optional AI narrative. The numeric score always uses deterministic rules.
+AI_BASE_URL = os.getenv("AI_BASE_URL", "")
+AI_API_KEY = os.getenv("AI_API_KEY") or os.getenv("GROQ_API_KEY", "")
+AI_TIMEOUT_SECONDS = int(os.getenv("AI_TIMEOUT_SECONDS", "12"))
+AI_MAX_RETRIES = int(os.getenv("AI_MAX_RETRIES", "1"))
+AI_CACHE_SECONDS = int(os.getenv("AI_CACHE_SECONDS", "900"))
+AI_MODEL_DEFAULT = os.getenv("AI_MODEL_DEFAULT", "")
 AI_MODEL_CHAT = os.getenv("AI_MODEL_CHAT", "")
-AI_MODEL_ANALYZE = os.getenv("AI_MODEL_ANALYZE", "glm-5.3-flash")
-AI_MODEL_GENERATE = os.getenv("AI_MODEL_GENERATE", "minimax-m3")
-AI_MODEL_SUMMARIZE = os.getenv("AI_MODEL_SUMMARIZE", "glm-5.3-flash")
+AI_MODEL_ANALYZE = os.getenv("AI_MODEL_ANALYZE", "")
+AI_MODEL_GENERATE = os.getenv("AI_MODEL_GENERATE", "")
+AI_MODEL_SUMMARIZE = os.getenv("AI_MODEL_SUMMARIZE", "")
 # Opt-in: adds an LLM-written summary next to the rules score. The hiring
 # disclaimer is always kept, and the numeric score never changes.
 AI_NARRATIVE_SCORES = env_bool("AI_NARRATIVE_SCORES", False)

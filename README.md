@@ -8,7 +8,14 @@ Built with Django 5.2 LTS, server-rendered Jinja2 templates, HTMX + Alpine for i
 DRF API. Every screen is backed by real data — the demo workspace ships with six requisitions,
 34 candidates, 36 applications, completed interviews with submitted scorecards, and a task board.
 
-**Live demo:** [https://ats.example.com](https://ats.example.com) · **API docs:** `/api/docs/`
+**Live demo:** [https://ats.taufikr.web.id/](https://ats.taufikr.web.id/) · **API docs:** [/api/docs/](https://ats.taufikr.web.id/api/docs/)
+
+For a quick review, sign in with `demo@example.com` / `demo123`, open **Candidates**,
+choose **Sarah Wijaya**, and select **Analyze fit**. The rule-based match score stays
+72.5%; the **AI match summary** explains the listed and missing requirements using
+Groq's `openai/gpt-oss-20b`. Resume parsing and numerical scoring are deterministic;
+the optional language model supplies the explanation. See [AI setup](docs/ai.md)
+for environment variables, caching, failure handling, and data sent to the provider.
 
 ---
 
@@ -226,6 +233,8 @@ and `sqlite://` are all supported; an unknown scheme fails fast with a clear err
 
 ## Environment variables
 
+For Groq setup and the candidate match-analysis flow, see [AI summaries](docs/ai.md).
+
 The complete list with inline documentation lives in [`.env.example`](.env.example). The ones that
 matter most:
 
@@ -324,8 +333,8 @@ pytest --cov --cov-fail-under=80              # coverage floor (CI enforces 80%)
 npm run build                                 # asset build must succeed
 ```
 
-**192 tests, 96% statement coverage** across `apps/` and `config/` (excluding migrations); 59 of
-84 modules sit at 100%. CI runs the suite with `-W error`, so a stray `DeprecationWarning` or an
+**206 tests, 95.8% statement coverage** across `apps/` and `config/` (excluding migrations),
+verified with Python 3.13 and SQLite. CI runs the suite with `-W error`, so a stray `DeprecationWarning` or an
 unclosed file fails the build rather than scrolling past.
 
 The suite covers tenant isolation, role scoping across both the web UI and the API, idempotent and

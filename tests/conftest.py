@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 from django.core.management import call_command
+from django.test import override_settings
 
 from apps.accounts.models import Organization
 
@@ -20,8 +21,14 @@ DEMO_PASSWORD = "demo123"
 @pytest.fixture(scope="session")
 def seeded_workspace(django_db_setup, django_db_blocker):
     """Build the demo organization once for the whole session."""
-    with django_db_blocker.unblock():
+    with django_db_blocker.unblock(), override_settings(AI_NARRATIVE_SCORES=False):
         call_command("seed_demo", verbosity=0, reset=True)
+
+
+@pytest.fixture(autouse=True)
+def offline_ai(settings):
+    """Tests explicitly opt in with a mocked provider; local keys are never used."""
+    settings.AI_NARRATIVE_SCORES = False
 
 
 @pytest.fixture

@@ -32,7 +32,11 @@ from apps.accounts.policies import (
 )
 from apps.applications.forms import MoveStageForm, RejectApplicationForm
 from apps.applications.models import Application, RejectionReason
-from apps.applications.services import move_application_stage, reject_application
+from apps.applications.services import (
+    move_application_stage,
+    refresh_match_score,
+    reject_application,
+)
 from apps.audit.models import AuditLog, record_audit
 from apps.candidates.forms import CandidateForm, PublicApplicationForm
 from apps.candidates.models import Candidate, DuplicateSuggestion, Resume
@@ -42,6 +46,7 @@ from apps.candidates.services import (
     merge_candidates,
     update_candidate,
 )
+from apps.common.ai_gateway import narrative_enabled
 from apps.common.pagination import paginate
 from apps.interviews.forms import InterviewForm
 from apps.interviews.models import Interview, ScorecardSubmission
@@ -468,17 +473,38 @@ def candidate_detail(request, organization_slug, candidate_id):
             "can_view_contact": can_view_contact,
             "applications": scope_applications(
                 membership,
-                candidate.applications.select_related("job", "current_stage"),
+                candidate.applications.select_related("job", "current_stage", "match_score"),
             ),
             "duplicate_suggestions": candidate.duplicate_suggestions.filter(
                 status=DuplicateSuggestion.Status.PENDING,
                 possible_duplicate_id__in=visible_candidates,
             ).select_related("possible_duplicate") if can_manage_candidates else [],
             "can_manage_candidates": can_manage_candidates,
+            "ai_enabled": narrative_enabled(),
             "can_manage_interviews": has_permission(membership, "interviews.manage"),
             "active_nav": "candidates",
         },
     )
+
+
+@login_required
+@require_POST
+def application_match_refresh(request, organization_slug, application_id):
+    organization, membership = _organization_context(request, organization_slug)
+    require_permission(membership, "candidates.manage")
+    application = get_object_or_404(scope_applications(membership), id=application_id)
+    score = refresh_match_score(
+        application_id=application.id,
+        organization=organization,
+        actor=request.user,
+        membership=membership,
+        request=request,
+    )
+    if score.explanation.get("ai_status") == "unavailable":
+        messages.warning(request, "Match score updated. AI summary is temporarily unavailable; try again shortly.")
+    else:
+        messages.success(request, "Match analysis updated.")
+    return redirect("candidate-detail", organization_slug=organization.slug, candidate_id=application.candidate_id)
 
 
 @login_required

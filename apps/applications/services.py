@@ -141,3 +141,23 @@ def recompute_match_score(application):
             "explanation": explanation,
         },
     )[0]
+
+
+def refresh_match_score(*, application_id, organization, actor, membership, request=None):
+    require_permission(membership, "candidates.manage")
+    application = scope_applications(
+        membership, Application.objects.select_related("job", "candidate")
+    ).filter(id=application_id, organization=organization).first()
+    if not application:
+        raise ValidationError("Application not found.")
+    _check_job_scope(membership, application.job)
+    score = recompute_match_score(application)
+    record_audit(
+        organization=organization,
+        actor=actor,
+        action="application.match_refreshed",
+        resource=application,
+        after={"total_score": str(score.total_score), "ai_status": score.explanation.get("ai_status", "disabled")},
+        request=request,
+    )
+    return score
