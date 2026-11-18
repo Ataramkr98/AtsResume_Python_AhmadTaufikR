@@ -96,13 +96,10 @@ def test_every_route_renders(demo_client):
             response = demo_client.get(url, follow=True)
             # Streaming responses (the resume download) have no .content until consumed.
             if hasattr(response, "streaming_content"):
-                try:
-                    body = b"".join(response.streaming_content)
-                finally:
-                    # Django's FileResponse registers the file handle in _resource_closers and
-                    # releases it from Response.close(). A WSGI server always calls close(); the
-                    # test client does not, so without this the handle leaks until GC.
-                    response.close()
+                # ClientHandler's closing iterator releases the file and sends
+                # request_finished with database cleanup temporarily disconnected.
+                # Closing again would close MySQL inside pytest's outer transaction.
+                body = b"".join(response.streaming_content)
             else:
                 body = response.content
         except Exception as exc:  # noqa: BLE001 - a raising view is exactly what we are catching
@@ -137,4 +134,5 @@ def test_no_route_returns_a_server_error(demo_client):
         try:
             assert response.status_code < 500, f"{label} ({url}) returned {response.status_code}"
         finally:
-            response.close()
+            if response.streaming and not response.closed:
+                b"".join(response.streaming_content)

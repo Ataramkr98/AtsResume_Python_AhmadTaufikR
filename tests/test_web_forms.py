@@ -404,7 +404,7 @@ def test_resume_download_streams_the_file_and_audits(demo_client, demo, admin_us
     body = b"".join(response.streaming_content)
     assert body == b"%PDF-1.4 resume body"
     assert AuditLog.objects.filter(organization=demo, action="resume.downloaded", resource_id=str(resume.id)).exists()
-    response.close()  # release the open file handle before GC (-W error treats leaks as failures)
+    assert response.closed  # Django's test-client iterator closes the file once exhausted.
 
 
 @pytest.mark.django_db
