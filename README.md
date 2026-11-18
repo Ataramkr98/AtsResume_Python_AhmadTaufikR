@@ -328,9 +328,10 @@ curl -b cookies.txt "http://127.0.0.1:8000/api/v1/organizations/northstar-labs/r
 ruff check .                                  # lint
 python manage.py check                        # Django system checks
 python manage.py makemigrations --check --dry-run   # no missing migrations
+npm run build                                 # compile CSS, JS and fonts
+python manage.py collectstatic --noinput       # prepare WhiteNoise before strict tests
 pytest -W error                               # test suite, warnings treated as failures
 pytest --cov --cov-fail-under=80              # coverage floor (CI enforces 80%)
-npm run build                                 # asset build must succeed
 ```
 
 **206 tests, 95.8% statement coverage** across `apps/` and `config/` (excluding migrations),
