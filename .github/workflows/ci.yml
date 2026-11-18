@@ -45,5 +45,22 @@ jobs:
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py migrate --noinput
-      - run: python -m pytest -W error --cov --cov-report=term-missing --cov-fail-under=80
+      - name: Test with coverage
+        id: tests
+        run: python -m pytest -W error --cov --cov-report=term-missing --cov-fail-under=80 --junitxml=pytest-results.xml
+      - name: Summarize test failures
+        if: failure() && steps.tests.outcome == 'failure'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          report = Path('pytest-results.xml')
+          if report.exists():
+              failures = ET.parse(report).getroot().findall('.//failure') + ET.parse(report).getroot().findall('.//error')
+              for failure in failures[:3]:
+                  message = ((failure.get('message') or '') + '\n' + (failure.text or ''))[:3500]
+                  message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                  print(f'::error title=Pytest failure::{message}')
+          PY
       - run: npm run build

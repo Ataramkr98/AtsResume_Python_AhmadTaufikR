@@ -18,6 +18,7 @@ htmlcov/
 .coverage
 .coverage.*
 coverage.xml
+pytest-results.xml
 node_modules/
 static_dist/
 staticfiles/
